@@ -1,0 +1,176 @@
+#
+#  makefile.common - comon makefile rules for makefile and makefile.win32
+#  Noel Burton-Krahn <noel@burton-krahn.com>
+#  Jan 1, 2003
+#
+#  Copyright (C) Noel Burton-Krahn, 2004, and is released under the
+#  GPL version 2 (see below).
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program (see the file COPYING included with this
+#  distribution); if not, write to the Free Software Foundation, Inc.,
+#  59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+
+.SUFFIXES: .x .h .c .dep
+
+all: rpcgen$x libxdr$l
+
+rpcgen_objs = rpc_main$o rpc_hout$o rpc_cout$o rpc_parse$o \
+	      rpc_scan$o rpc_util$o rpc_svcout$o rpc_clntout$o \
+	      rpc_tblout$o rpc_sample$o
+rpcgen$x: $(rpcgen_objs)
+	$(LINK_EXE) $(rpcgen_objs)	
+
+
+libxdr_objs= \
+xdr$o \
+xdr_array$o \
+xdr_float$o \
+xdr_intXX_t$o \
+xdr_mem$o \
+xdr_rec$o \
+xdr_ref$o \
+xdr_sizeof$o \
+xdr_stdio$o \
+xdr_label$o \
+xdr_xml$o \
+xdr_bk$o \
+base64$o \
+libexpat$l
+
+libxdr$l: $(libxdr_objs)
+	$(LINK_LIB) $(libxdr_objs) $(libxdr_obj_os)
+
+bkxml_objs = \
+libexpat$l  \
+bkxml$o
+
+bkxml$o: libexpat$l 
+
+bkxml$l: $(bkxml_objs)
+	$(LINK_LIB) $(bkxml_objs) $(bkxml_obj_os)
+
+cleanxdr:
+	$(RM) xdr_xml_t_xdr.c
+	$(RM) xdr_xml_t_xdr.h
+	$(RM) mystruct_xdr.c
+	$(RM) mystruct_xdr.h
+
+clean: cleanxdr
+	$(RM) *$o libxdr$l rpcgen$x
+	$(RM) -rf expat-1.95.8
+	$(RM) libexpat$l
+	$(RM) *.lib *.ilk *.pdb *.opt *.sln *.exe
+	$(RM) *~ *.bak
+
+distclean: clean
+	$(RM) *.dep
+	$(RM) *_xdr.[ch]
+
+.x.h: 
+	$(RM) $@
+	$(RPCGEN) -h $< > $@
+
+.x.c: 
+	$(RM) $@
+	$(RPCGEN) -c -o $@ $<
+
+
+expat-1.95.8: expat-1.95.8.tar.gz
+	$(RM) -rf expat-1.95.8
+	tar zxf expat-1.95.8.tar.gz
+
+# rules for libexpat$l in makefile.win32 and makefile
+
+bkxdr_objs=libxdr$l
+bkxdr_libs=$(os_libs)
+
+xdr_xml$o: libexpat$l
+
+guac_t$o: guac_xdr.h
+guac_t_xdr$o: guac_xdr.c
+guac_t_objs = guac_t$o guac_xdr$o $(bkxdr_objs)
+guac_t$x: $(RPCGEN) $(guac_t_objs)
+	     $(LINK_EXE) $(guac_t_objs) $(bkxdr_libs)
+
+xdr_xml_t$o: xdr_xml_t_xdr.h
+xdr_xml_t_xdr$o: xdr_xml_t_xdr.c
+xdr_xml_t_objs = xdr_xml_t$o xdr_xml_t_xdr$o $(bkxdr_objs)
+xdr_xml_t$x: $(RPCGEN) $(xdr_xml_t_objs)
+	     $(LINK_EXE) $(xdr_xml_t_objs) $(bkxdr_libs)
+
+xdrxml_stream_t$o: xdr_xml_t_xdr.h
+xdrxml_stream_t_objs = xdrxml_stream_t$o xdr_xml_t_xdr$o $(bkxdr_objs)
+xdrxml_stream_t$x: $(RPCGEN) $(xdrxml_stream_t_objs)
+	     $(LINK_EXE) $(xdrxml_stream_t_objs) $(bkxdr_libs)
+
+expat_t_objs = expat_t$o libexpat$l
+expat_t$x: $(RPCGEN) $(expat_t_objs)
+	     $(LINK_EXE) $(expat_t_objs) $(bkxdr_libs)
+
+bkxml_t_objs = bkxml_t$o bkxml$l $(libbk_objs)
+bkxml_t_libs = libexpat$l
+bkxml_t$x: $(bkxml_t_objs)
+	     $(LINK_EXE) $(bkxml_t_objs) $(bkxml_t_libs) $(os_libs) $(libbk_libs)
+
+
+base64_t_objs = base64_t$o base64$o 
+base64_t$x: $(RPCGEN) $(base64_t_objs)
+	     $(LINK_EXE) $(base64_t_objs)
+
+xdr_t$o: 
+xdr_t_objs = xdr_t$o libxdr$l $(libbk_objs)
+xdr_t$x: $(xdr_t_objs) 
+	     $(LINK_EXE) $(xdr_t_objs) $(os_libs) $(libbk_libs)
+
+mystruct_xdr.c mystruct_xdr.h: rpcgen$x
+mystruct$o: mystruct_xdr.h
+mystruct_xdr$o: mystruct_xdr.c mystruct_xdr.h
+mystruct_objs = mystruct_xdr$o mystruct$o libxdr$l 
+mystruct$x: $(mystruct_objs) 
+	     $(LINK_EXE) $(mystruct_objs) $(os_libs)
+# bkxml_t$x 
+TESTS=xdr_xml_t$x bkxml_t$x expat_t$x base64_t$x xdr_t$x
+test: $(TESTS)
+	for i in $(TESTS); do date; echo $$i; $$i; done
+
+.phony:
+
+../bklib/libbk$l: .phony
+	cd ../bklib && $(MAKE_CMD) libbk$l
+	
+all_deps = \
+xdr.dep \
+xdr_array.dep \
+xdr_float.dep \
+xdr_intXX_t.dep \
+xdr_mem.dep \
+xdr_rec.dep \
+xdr_ref.dep \
+xdr_sizeof.dep \
+xdr_stdio.dep \
+xdr_label.dep \
+xdr_xml.dep \
+xdr_bk.dep \
+base64.dep \
+
+.c.dep:
+	$(CC) -E $(CFLAGS) $< | perl cpp2dep.pl $*$o $*.dep
+
+makefile.dep: $(all_deps)
+	cat $(all_deps) > makefile.dep
+
+dep: makefile.dep
+
+include makefile.dep

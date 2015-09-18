@@ -1,0 +1,52 @@
+#
+#  makefile.win32 - makefile for win32 (msvc6+, nmake)
+#  Noel Burton-Krahn <noel@burton-krahn.com>
+#  Jan 1, 2003
+#
+#  Copyright (C) Noel Burton-Krahn, 2004, and is released under the
+#  GPL version 2 (see below).
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program (see the file COPYING included with this
+#  distribution); if not, write to the Free Software Foundation, Inc.,
+#  59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+
+INC = -I.
+INCLUDE=$(INCLUDE);./expat-1.95.8/lib
+#---------------------------------------------------------------------
+# win32
+l = .lib
+o = .obj
+x = .exe
+CFLAGS = /Zi /W3 /MT /nologo $(INC)
+LINK_EXE = link /debug /out:$@
+LINK_LIB = lib /debugtype:cv /out:$@
+MAKE_CMD = $(MAKE) -$(MAKEFLAGS) -f makefile.win32 
+RM = rm -f
+
+SHELL = c:/cygwin/bin/bash
+VB = vb6.exe
+WISE="C:\Program Files\Wise Installation System\Wise9.exe"
+
+RPCGEN=.\rpcgen$x
+
+os_libs=shell32.lib ws2_32.lib
+
+include makefile.common
+
+libexpat$l: makefile.expat.win32 expat-1.95.8
+	cp -f makefile.expat.win32 expat-1.95.8/lib
+	cd expat-1.95.8/lib && nmake -f makefile.expat.win32 all
+	cp expat-1.95.8/lib/libexpat$l .
+

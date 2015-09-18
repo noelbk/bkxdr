@@ -1,0 +1,37 @@
+#---------------------------------------------------------------------
+# win32
+l = .lib
+o = .obj
+x = .exe
+CFLAGS = /Zi /W3 /MT /nologo -DXML_STATIC -DCOMPILED_FROM_DSP $(INC)
+LINK_EXE = link /nologo /debug /out:$@
+LINK_LIB = lib /nologo /debugtype:cv /out:$@
+MAKE_CMD = $(MAKE) -$(MAKEFLAGS) -f makefile.win32 
+RM = rm -f
+MKDIR=c:\cygwin\bin\mkdir.exe -p
+
+SHELL = c:/cygwin/bin/bash
+VB = vb6.exe
+WISE="C:\Program Files\Wise Installation System\Wise9.exe"
+RPCGEN=bkxdr\rpcgen$x
+
+#---------------------------------------------------------------------
+
+all: libexpat$l
+
+libexpat_objs=xmlparse$o xmlrole$o xmltok$o 
+libexpat$l: $(libexpat_objs)
+	$(LINK_LIB) $(libexpat_objs)
+
+
+.c.dep:
+	printf "$*$o: \\\\\\n" > $*.dep
+	$(CC) -E $(CFLAGS) $< | \
+	  sed -n -e 's/^#line [0-9]* "\(.*\)"/\1 \\\\/p' | \
+	  sed -e '/c:/d' | \
+	  sort | uniq >> $*.dep
+	printf 'makefile\n\n' >> $*.dep
+
+#include makefile.common
+
+
